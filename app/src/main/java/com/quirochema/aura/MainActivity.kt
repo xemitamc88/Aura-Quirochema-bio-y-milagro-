@@ -1,6 +1,4 @@
-
 package com.quirochema.aura
-
 import android.app.Activity
 import android.os.Bundle
 import android.graphics.Color
