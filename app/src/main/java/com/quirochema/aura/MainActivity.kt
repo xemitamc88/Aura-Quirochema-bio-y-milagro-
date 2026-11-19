@@ -1,4 +1,3 @@
-
 package com.quirochema.aura
 
 import android.app.Activity
@@ -140,7 +139,7 @@ class MainActivity : Activity() {
         search = EditText(this).apply {
             hint = "Buscar aura, emoción, chakra..."
             textSize = 14f
-            singleLine = true
+            maxLines = 1
             setPadding(dp(14), dp(10), dp(14), dp(10))
             background = rounded(
                 Color.WHITE,
@@ -175,7 +174,7 @@ class MainActivity : Activity() {
         // CONTENIDO
 
         val scroll = ScrollView(this).apply {
-            fillViewport = true
+            isFillViewport = true
         }
 
         content = LinearLayout(this).apply {
@@ -274,10 +273,9 @@ class MainActivity : Activity() {
         checkForLibraryUpdate()
     }
 
-    // NORMALIZAR TEXTO PARA BÚSQUEDAS
+    // NORMALIZAR TEXTO
 
     private fun normalize(value: String): String {
-
         return Normalizer.normalize(
             value.lowercase(Locale.ROOT),
             Normalizer.Form.NFD
@@ -304,7 +302,7 @@ class MainActivity : Activity() {
                     }
 
                 } catch (e: Exception) {
-                    // Intentar recuperar desde assets
+                    // Recuperar desde assets
                 }
             }
 
@@ -331,10 +329,9 @@ class MainActivity : Activity() {
     // VALIDAR BIBLIOTECA
 
     private fun validateLibrary(json: JSONObject): Boolean {
-
         return libraryKeys.all { key ->
             val array = json.optJSONArray(key)
-            array != null && array.length() >= 0
+            array != null
         }
     }
 
@@ -404,7 +401,6 @@ class MainActivity : Activity() {
                 } else {
 
                     runOnUiThread {
-
                         updateStatus.text =
                             "Biblioteca actualizada · Sin novedades"
                     }
@@ -505,7 +501,6 @@ class MainActivity : Activity() {
                     "Curso",
                     "Perdón"
                 ).forEach { name ->
-
                     action(name) {
                         showSection(name)
                     }
@@ -523,30 +518,15 @@ class MainActivity : Activity() {
                 )
             }
 
-            "Aura" -> showArray(
-                "colors",
-                "Colores del aura"
-            )
+            "Aura" -> showArray("colors", "Colores del aura")
 
-            "Emociones" -> showArray(
-                "emotions",
-                "Emociones"
-            )
+            "Emociones" -> showArray("emotions", "Emociones")
 
-            "Síntomas" -> showArray(
-                "symptoms",
-                "Lecturas simbólicas"
-            )
+            "Síntomas" -> showArray("symptoms", "Lecturas simbólicas")
 
-            "Curso" -> showArray(
-                "ucdm",
-                "Un Curso de Milagros"
-            )
+            "Curso" -> showArray("ucdm", "Un Curso de Milagros")
 
-            "Perdón" -> showArray(
-                "prayers",
-                "Oraciones y reflexiones"
-            )
+            "Perdón" -> showArray("prayers", "Oraciones y reflexiones")
         }
     }
 
@@ -618,14 +598,11 @@ class MainActivity : Activity() {
         }
 
         if (found == 0) {
-
             paragraph(
                 "No se encontraron coincidencias. " +
                 "Prueba con otra palabra."
             )
-
         } else {
-
             paragraph("Resultados encontrados: $found")
         }
     }
@@ -641,9 +618,7 @@ class MainActivity : Activity() {
                 val items = mutableListOf<String>()
 
                 for (i in 0 until value.length()) {
-                    items.add(
-                        jsonValueToString(value.get(i))
-                    )
+                    items.add(jsonValueToString(value.get(i)))
                 }
 
                 items.joinToString(", ")
@@ -883,7 +858,6 @@ class MainActivity : Activity() {
     ): GradientDrawable {
 
         return GradientDrawable().apply {
-
             setColor(color)
             cornerRadius = radius.toFloat()
 
@@ -896,7 +870,6 @@ class MainActivity : Activity() {
     // CONVERSIÓN DP
 
     private fun dp(value: Int): Int {
-
         return (
             value * resources.displayMetrics.density
         ).toInt()
