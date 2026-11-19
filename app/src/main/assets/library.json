@@ -1,0 +1,242 @@
+{
+  "colors": [
+    {
+      "name": "Rojo",
+      "hex": "#D93636",
+      "chakra": "Raíz",
+      "meaning": "Vitalidad, acción y seguridad",
+      "strengths": "Coraje, iniciativa y determinación",
+      "challenges": "Impulsividad o urgencia",
+      "question": "¿Dónde necesitas más seguridad?",
+      "practice": "Caminar con atención y definir un paso realista."
+    },
+    {
+      "name": "Naranja",
+      "hex": "#F28C28",
+      "chakra": "Sacro",
+      "meaning": "Creatividad, placer y movimiento emocional",
+      "strengths": "Flexibilidad, imaginación y alegría",
+      "challenges": "Impulsividad o dificultad con límites",
+      "question": "¿Qué te hace disfrutar genuinamente?",
+      "practice": "Movimiento consciente y creatividad libre."
+    },
+    {
+      "name": "Amarillo",
+      "hex": "#F4D33F",
+      "chakra": "Plexo solar",
+      "meaning": "Autoestima, voluntad y claridad",
+      "strengths": "Optimismo, autonomía y concentración",
+      "challenges": "Autoexigencia o exceso de análisis",
+      "question": "¿Qué valoras de ti sin buscar aprobación?",
+      "practice": "Registrar logros y elegir una prioridad."
+    },
+    {
+      "name": "Verde",
+      "hex": "#39A96B",
+      "chakra": "Corazón",
+      "meaning": "Crecimiento, cuidado y renovación",
+      "strengths": "Compasión, cooperación y paciencia",
+      "challenges": "Sacrificio excesivo o dificultad para recibir",
+      "question": "¿Cómo equilibras dar y recibir?",
+      "practice": "Practicar reciprocidad y límites afectuosos."
+    },
+    {
+      "name": "Turquesa",
+      "hex": "#36B8B0",
+      "chakra": "Corazón y garganta",
+      "meaning": "Comunicación empática y creatividad",
+      "strengths": "Escucha y expresión amable",
+      "challenges": "Callar para evitar conflictos",
+      "question": "¿Qué necesitas expresar con respeto?",
+      "practice": "Escritura expresiva y conversación pausada."
+    },
+    {
+      "name": "Azul claro",
+      "hex": "#66BDE8",
+      "chakra": "Garganta",
+      "meaning": "Calma, sinceridad y comunicación",
+      "strengths": "Serenidad y honestidad",
+      "challenges": "Retraimiento o dificultad para defender la propia voz",
+      "question": "¿Qué te gustaría expresar?",
+      "practice": "Escritura y comunicación asertiva."
+    },
+    {
+      "name": "Índigo",
+      "hex": "#3949AB",
+      "chakra": "Tercer ojo",
+      "meaning": "Introspección e imaginación",
+      "strengths": "Observación y contemplación",
+      "challenges": "Sobreanálisis o confundir intuición con certeza",
+      "question": "¿Qué sabes y qué estás suponiendo?",
+      "practice": "Contrastar intuiciones con hechos."
+    },
+    {
+      "name": "Violeta",
+      "hex": "#7950B8",
+      "chakra": "Corona",
+      "meaning": "Espiritualidad y búsqueda de significado",
+      "strengths": "Inspiración y reflexión",
+      "challenges": "Idealización o evasión de lo cotidiano",
+      "question": "¿Cómo llevas tus ideales a acciones concretas?",
+      "practice": "Combinar contemplación con rutinas."
+    },
+    {
+      "name": "Rosa",
+      "hex": "#E98BAF",
+      "chakra": "Corazón",
+      "meaning": "Afecto, ternura y cuidado",
+      "strengths": "Empatía y amabilidad",
+      "challenges": "Complacencia o miedo al abandono",
+      "question": "¿Qué límite protegería tu bienestar?",
+      "practice": "Autocompasión y límites sin culpa."
+    },
+    {
+      "name": "Blanco",
+      "hex": "#E7E9ED",
+      "chakra": "Corona",
+      "meaning": "Claridad, apertura y renovación",
+      "strengths": "Receptividad y sencillez",
+      "challenges": "Idealizar la pureza o evitar emociones difíciles",
+      "question": "¿Qué emoción estás dejando fuera?",
+      "practice": "Nombrar emociones sin juzgarlas."
+    },
+    {
+      "name": "Dorado",
+      "hex": "#C89B36",
+      "chakra": "Plexo solar y corona",
+      "meaning": "Propósito y confianza simbólica",
+      "strengths": "Generosidad y visión",
+      "challenges": "Apego al reconocimiento",
+      "question": "¿Qué aportación te importa aunque nadie la aplauda?",
+      "practice": "Colaboración y revisión de valores."
+    },
+    {
+      "name": "Plateado",
+      "hex": "#AEB8C4",
+      "chakra": "Sin correspondencia única",
+      "meaning": "Sensibilidad e imaginación",
+      "strengths": "Flexibilidad y apertura",
+      "challenges": "Dispersión o dificultad para decidir",
+      "question": "¿Qué posibilidad merece un paso concreto?",
+      "practice": "Elegir una acción verificable."
+    },
+    {
+      "name": "Marrón",
+      "hex": "#8B6548",
+      "chakra": "Raíz",
+      "meaning": "Practicidad y estabilidad",
+      "strengths": "Constancia y realismo",
+      "challenges": "Rigidez o preocupación material",
+      "question": "¿Qué estructura te sostiene?",
+      "practice": "Ordenar prioridades y hacer cambios graduales."
+    },
+    {
+      "name": "Gris",
+      "hex": "#858C96",
+      "chakra": "Sin correspondencia única",
+      "meaning": "Reserva, transición y cautela",
+      "strengths": "Prudencia y observación",
+      "challenges": "Indecisión o necesidad de espacio",
+      "question": "¿Qué necesitas para recuperar claridad?",
+      "practice": "Pausa, descanso y revisar opciones."
+    }
+  ],
+  "emotions": [
+    {
+      "name": "Miedo",
+      "description": "Respuesta emocional ante una amenaza percibida. Explora qué se siente amenazado y qué apoyo hace falta.",
+      "question": "¿Qué sé con certeza y qué estoy anticipando?",
+      "practice": "Respiración cómoda, orientación al entorno y un paso pequeño."
+    },
+    {
+      "name": "Culpa",
+      "description": "Puede aparecer al percibir que se ha actuado contra los propios valores. Distinguir responsabilidad de autocastigo.",
+      "question": "¿Hay algo concreto que reparar? ¿Qué puedo aprender sin castigarme?",
+      "practice": "Nombrar el hecho, reparar si procede y elegir una acción."
+    },
+    {
+      "name": "Ira",
+      "description": "Puede señalar frustración, límites vulnerados o necesidades no atendidas.",
+      "question": "¿Qué límite o necesidad está pidiendo atención?",
+      "practice": "Pausa, movimiento seguro y comunicación clara."
+    },
+    {
+      "name": "Tristeza",
+      "description": "Puede acompañar pérdidas, cambios o necesidades de apoyo.",
+      "question": "¿Qué estoy echando de menos y qué apoyo necesito?",
+      "practice": "Permitir la emoción, descanso y conexión con alguien de confianza."
+    },
+    {
+      "name": "Resentimiento",
+      "description": "Puede relacionarse con una herida percibida que sigue ocupando espacio emocional.",
+      "question": "¿Qué ocurrió? ¿Qué límite o conversación quedó pendiente?",
+      "practice": "Escritura privada, límites y decidir si una conversación es segura."
+    },
+    {
+      "name": "Ansiedad",
+      "description": "Experiencia de preocupación o activación; no permite deducir por sí sola un conflicto oculto.",
+      "question": "¿Qué está pasando ahora y qué necesito en este momento?",
+      "practice": "Orientación sensorial, respiración natural y apoyo profesional si persiste."
+    }
+  ],
+  "symptoms": [
+    {
+      "name": "Garganta / voz",
+      "symbolic": "En algunos enfoques de biodescodificación se interpreta simbólicamente como expresión o dificultad para decir algo. No es una causa médica demostrada.",
+      "question": "¿Hay algo que quieras comunicar y no encuentras cómo?",
+      "safety": "Si hay dolor persistente, dificultad para tragar o respirar, consulta con un profesional sanitario."
+    },
+    {
+      "name": "Espalda",
+      "symbolic": "Algunas lecturas simbólicas la relacionan con apoyo, carga o responsabilidad. No explica lesiones ni enfermedades.",
+      "question": "¿Qué responsabilidades sientes que estás sosteniendo?",
+      "safety": "Valorar médicamente el síntoma y revisar ergonomía, descanso y apoyos."
+    },
+    {
+      "name": "Estómago",
+      "symbolic": "Algunas corrientes lo vinculan metafóricamente con preocupación o dificultad para asimilar situaciones.",
+      "question": "¿Qué situación te está costando procesar?",
+      "safety": "Los síntomas digestivos persistentes requieren valoración sanitaria."
+    },
+    {
+      "name": "Cabeza",
+      "symbolic": "En interpretaciones simbólicas puede asociarse a presión, exigencia o sobrecarga mental.",
+      "question": "¿Qué exigencia podrías revisar?",
+      "safety": "Dolor de cabeza intenso, repentino o acompañado de síntomas neurológicos requiere atención urgente."
+    }
+  ],
+  "ucdm": [
+    {
+      "title": "Perdón",
+      "summary": "En Un Curso de Milagros, el perdón se presenta como un cambio de percepción y una manera de dejar de alimentar el juicio. Esta es una síntesis explicativa, no una cita textual.",
+      "reflection": "¿Qué interpretación estoy sosteniendo y qué otra mirada más compasiva puedo considerar?",
+      "practice": "Haz una pausa, reconoce lo que sientes y formula una intención de mirar la situación con mayor claridad."
+    },
+    {
+      "title": "Miedo y amor",
+      "summary": "El Curso utiliza el contraste entre miedo y amor como eje de su marco espiritual.",
+      "reflection": "¿Qué decisión nace del miedo y cuál se acerca más a la paz?",
+      "practice": "Escribe ambas posibilidades sin obligarte a sentir algo distinto."
+    },
+    {
+      "title": "Paz interior",
+      "summary": "La paz se explora como una disposición interior que no depende únicamente de controlar las circunstancias.",
+      "reflection": "¿Qué puedo dejar de intentar controlar ahora mismo?",
+      "practice": "Dedica unos minutos a observar tus pensamientos sin luchar contra ellos."
+    }
+  ],
+  "prayers": [
+    {
+      "title": "Oración de perdón",
+      "text": "Hoy me permito mirar esta experiencia con honestidad y amabilidad. Reconozco lo que siento, suelto poco a poco el juicio y elijo aprender sin castigarme. Que pueda encontrar claridad, poner límites cuando sean necesarios y avanzar con paz."
+    },
+    {
+      "title": "Oración para el miedo",
+      "text": "Aunque hoy sienta miedo, no necesito pelear conmigo. Puedo respirar, buscar apoyo y dar un paso pequeño. Me trato con paciencia y recuerdo que no tengo que resolverlo todo ahora."
+    },
+    {
+      "title": "Oración inspirada en el perdón del Curso",
+      "text": "Quiero abrirme a una mirada más amable. Que el juicio deje espacio a la comprensión y que pueda reconocer mi responsabilidad sin condenarme. Elijo dar un paso hacia la paz."
+    }
+  ]
+}
