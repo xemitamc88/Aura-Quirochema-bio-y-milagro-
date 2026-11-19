@@ -6,13 +6,16 @@ import android.os.Bundle
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.util.AtomicFile
 import android.view.Gravity
-import android.view.View
 import android.widget.*
 import android.text.TextWatcher
 import android.text.Editable
 import org.json.JSONObject
 import org.json.JSONArray
+import java.io.File
+import java.net.HttpURLConnection
+import java.net.URL
 
 class MainActivity : Activity() {
 
@@ -20,14 +23,18 @@ class MainActivity : Activity() {
     private val teal = Color.rgb(53, 157, 166)
     private val navy = Color.rgb(23, 34, 57)
     private val paper = Color.rgb(247, 249, 250)
-    private val muted = Color.rgb(110, 120, 130)
+
+    private val libraryUrl =
+        "https://raw.githubusercontent.com/xemitamc88/Aura-Quirochema-bio-y-milagro-/main/app/src/main/assets/library.json"
 
     private lateinit var content: LinearLayout
     private lateinit var search: EditText
     private lateinit var library: JSONObject
+    private lateinit var updateStatus: TextView
 
     private var currentSection = "Inicio"
     private var loadError = false
+    private var libraryRaw = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,14 +54,14 @@ class MainActivity : Activity() {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
             setPadding(dp(20), dp(24), dp(20), dp(22))
-            background = rounded(navy, 0, 0)
+            setBackgroundColor(navy)
         }
 
         val logo = TextView(this).apply {
             text = "AURA"
             textSize = 29f
             setTextColor(Color.WHITE)
-            typeface = Typeface.create("sans-serif", Typeface.BOLD)
+            typeface = Typeface.DEFAULT_BOLD
             gravity = Gravity.CENTER
             letterSpacing = 0.16f
         }
@@ -93,7 +100,11 @@ class MainActivity : Activity() {
             textSize = 14f
             singleLine = true
             setPadding(dp(14), dp(10), dp(14), dp(10))
-            background = rounded(Color.WHITE, dp(12), Color.rgb(225, 230, 233))
+            background = rounded(
+                Color.WHITE,
+                dp(12),
+                Color.rgb(225, 230, 233)
+            )
         }
 
         searchContainer.addView(
@@ -103,7 +114,22 @@ class MainActivity : Activity() {
 
         root.addView(searchContainer)
 
-        // CONTENIDO DESPLAZABLE
+        // ESTADO DE ACTUALIZACIÓN
+        updateStatus = TextView(this).apply {
+            text = if (loadError) {
+                "Biblioteca no disponible"
+            } else {
+                "Biblioteca local disponible"
+            }
+
+            textSize = 11f
+            setTextColor(teal)
+            setPadding(dp(16), dp(3), dp(16), dp(7))
+        }
+
+        root.addView(updateStatus)
+
+        // CONTENIDO
         val scroll = ScrollView(this).apply {
             fillViewport = true
         }
@@ -160,10 +186,7 @@ class MainActivity : Activity() {
 
             navigation.addView(
                 button,
-                LinearLayout.LayoutParams(
-                    dp(92),
-                    dp(48)
-                )
+                LinearLayout.LayoutParams(dp(92), dp(48))
             )
         }
 
@@ -201,20 +224,176 @@ class MainActivity : Activity() {
         })
 
         showSection("Inicio")
+
+        // COMPROBAR ACTUALIZACIONES
+        checkForLibraryUpdate()
     }
 
-    // CARGAR BIBLIOTECA LOCAL
+    // CARGAR BIBLIOTECA
     private fun loadLibrary() {
+
+        val localFile = File(filesDir, "library.json")
+
         try {
-            val json = assets.open("library.json")
-                .bufferedReader()
+
+            if (localFile.exists()) {
+
+                libraryRaw = localFile.readText(Charsets.UTF_8)
+                library = JSONObject(libraryRaw)
+                loadError = false
+                return
+            }
+
+            libraryRaw = assets.open("library.json")
+                .bufferedReader(Charsets.UTF_8)
                 .use { it.readText() }
 
-            library = JSONObject(json)
+            library = JSONObject(libraryRaw)
+            loadError = false
 
         } catch (e: Exception) {
+
             library = JSONObject()
+            libraryRaw = ""
             loadError = true
+        }
+    }
+
+    // ACTUALIZACIONES AUTOMÁTICAS DESDE GITHUB
+    private fun checkForLibraryUpdate() {
+
+        updateStatus.text = "Comprobando actualizaciones..."
+
+        Thread {
+
+            var connection: HttpURLConnection? = null
+
+            try {
+
+                connection = URL(libraryUrl)
+                    .openConnection() as HttpURLConnection
+
+                connection.requestMethod = "GET"
+                connection.connectTimeout = 10000
+                connection.readTimeout = 15000
+                connection.setRequestProperty(
+                    "User-Agent",
+                    "Aura-Quirochema-Android"
+                )
+                connection.setRequestProperty(
+                    "Cache-Control",
+                    "no-cache"
+                )
+
+                val response = connection.responseCode
+
+                if (response != HttpURLConnection.HTTP_OK) {
+                    throw Exception("Error HTTP: $response")
+                }
+
+                val downloaded = connection.inputStream
+                    .bufferedReader(Charsets.UTF_8)
+                    .use { it.readText() }
+
+                // VALIDAR JSON
+                val newLibrary = JSONObject(downloaded)
+
+                val validKeys = listOf(
+                    "colors",
+                    "emotions",
+                    "symptoms",
+                    "ucdm",
+                    "prayers"
+                )
+
+                val validLibrary = validKeys.any { key ->
+                    newLibrary.optJSONArray(key) != null
+                }
+
+                if (!validLibrary) {
+                    throw Exception("Biblioteca JSON no válida")
+                }
+
+                // COMPROBAR SI HAY CAMBIOS
+                if (downloaded.trim() != libraryRaw.trim()) {
+
+                    saveLibrary(downloaded)
+
+                    runOnUiThread {
+
+                        libraryRaw = downloaded
+                        library = newLibrary
+                        loadError = false
+
+                        updateStatus.text =
+                            "Biblioteca actualizada correctamente"
+
+                        refreshContent()
+                    }
+
+                } else {
+
+                    runOnUiThread {
+                        updateStatus.text = "Biblioteca actualizada · Sin novedades"
+                    }
+                }
+
+            } catch (e: Exception) {
+
+                runOnUiThread {
+
+                    updateStatus.text =
+                        if (loadError) {
+                            "No se pudo conectar ni cargar la biblioteca"
+                        } else {
+                            "Sin conexión · Biblioteca guardada disponible"
+                        }
+                }
+
+            } finally {
+                connection?.disconnect()
+            }
+
+        }.start()
+    }
+
+    // GUARDAR ACTUALIZACIÓN DE FORMA SEGURA
+    private fun saveLibrary(json: String) {
+
+        val file = File(filesDir, "library.json")
+        val atomicFile = AtomicFile(file)
+
+        var output: java.io.FileOutputStream? = null
+
+        try {
+
+            output = atomicFile.startWrite()
+
+            output.write(json.toByteArray(Charsets.UTF_8))
+            output.flush()
+
+            atomicFile.finishWrite(output)
+            output = null
+
+        } catch (e: Exception) {
+
+            if (output != null) {
+                atomicFile.failWrite(output)
+            }
+
+            throw e
+        }
+    }
+
+    // ACTUALIZAR PANTALLA
+    private fun refreshContent() {
+
+        val query = search.text.toString().trim()
+
+        if (query.isNotEmpty()) {
+            showSearch(query)
+        } else {
+            showSection(currentSection)
         }
     }
 
@@ -226,16 +405,14 @@ class MainActivity : Activity() {
 
         if (loadError) {
             heading("Biblioteca no disponible")
-            paragraph(
-                "No se ha podido cargar library.json. " +
-                "Comprueba que esté dentro de app/src/main/assets."
-            )
+            paragraph("Comprueba la conexión o los archivos locales.")
             return
         }
 
         when (section) {
 
             "Inicio" -> {
+
                 heading("Bienvenido a Aura Quirochema")
 
                 paragraph(
@@ -262,25 +439,18 @@ class MainActivity : Activity() {
                 heading("Buscador inteligente")
 
                 paragraph(
-                    "Escribe una palabra para localizar información " +
-                    "en todos los apartados de la biblioteca."
+                    "Busca información en todos los apartados " +
+                    "de la biblioteca."
                 )
 
                 paragraph(
-                    "La información se consulta desde el contenido " +
-                    "local instalado en tu dispositivo."
+                    "La biblioteca puede consultarse sin conexión."
                 )
             }
 
-            "Aura" -> showArray(
-                "colors",
-                "Colores del aura"
-            )
+            "Aura" -> showArray("colors", "Colores del aura")
 
-            "Emociones" -> showArray(
-                "emotions",
-                "Emociones"
-            )
+            "Emociones" -> showArray("emotions", "Emociones")
 
             "Síntomas" -> showArray(
                 "symptoms",
@@ -299,7 +469,7 @@ class MainActivity : Activity() {
         }
     }
 
-    // MOSTRAR CONTENIDO JSON
+    // MOSTRAR CONTENIDO
     private fun showArray(key: String, title: String) {
 
         heading(title)
@@ -307,7 +477,7 @@ class MainActivity : Activity() {
         val array = library.optJSONArray(key)
 
         if (array == null || array.length() == 0) {
-            paragraph("Todavía no hay contenidos disponibles en esta sección.")
+            paragraph("Todavía no hay contenidos disponibles.")
             return
         }
 
@@ -330,7 +500,6 @@ class MainActivity : Activity() {
         content.removeAllViews()
 
         heading("Resultados de búsqueda")
-
         paragraph("Buscando: $query")
 
         if (loadError) {
@@ -356,7 +525,7 @@ class MainActivity : Activity() {
 
                 val obj = array.optJSONObject(i) ?: continue
 
-                if (obj.toString().contains(query, ignoreCase = true)) {
+                if (obj.toString().contains(query, true)) {
 
                     val title = obj.optString(
                         "name",
@@ -370,22 +539,29 @@ class MainActivity : Activity() {
         }
 
         if (found == 0) {
+
             paragraph(
                 "No se encontraron coincidencias. " +
-                "Prueba con otra palabra o un término relacionado."
+                "Prueba con otra palabra."
             )
+
         } else {
+
             paragraph("Resultados encontrados: $found")
         }
     }
 
-    // TARJETAS DE INFORMACIÓN
+    // TARJETAS
     private fun card(title: String, obj: JSONObject) {
 
         val box = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(17), dp(16), dp(17), dp(17))
-            background = rounded(Color.WHITE, dp(14), Color.rgb(232, 236, 238))
+            background = rounded(
+                Color.WHITE,
+                dp(14),
+                Color.rgb(232, 236, 238)
+            )
         }
 
         val titleView = TextView(this).apply {
@@ -398,6 +574,7 @@ class MainActivity : Activity() {
         box.addView(titleView)
 
         val fields = listOf(
+            "hex",
             "meaning",
             "strengths",
             "challenges",
@@ -425,6 +602,7 @@ class MainActivity : Activity() {
         )
 
         val labels = mapOf(
+            "hex" to "Código de color",
             "meaning" to "Significado",
             "strengths" to "Fortalezas",
             "challenges" to "Posibles retos",
@@ -458,19 +636,24 @@ class MainActivity : Activity() {
             if (value != null && value != JSONObject.NULL) {
 
                 val text = when (value) {
+
                     is JSONArray -> {
                         (0 until value.length()).joinToString(", ") {
                             value.optString(it)
                         }
                     }
+
                     is JSONObject -> value.toString(2)
+
                     else -> value.toString()
                 }
 
                 if (text.isNotBlank()) {
 
                     val fieldView = TextView(this).apply {
-                        this.text = "${labels[key] ?: key}: $text"
+                        this.text =
+                            "${labels[key] ?: key}: $text"
+
                         textSize = 14f
                         setTextColor(ink)
                         setPadding(0, dp(10), 0, 0)
@@ -495,29 +678,29 @@ class MainActivity : Activity() {
     // TÍTULOS
     private fun heading(text: String) {
 
-        val view = TextView(this).apply {
-            this.text = text
-            textSize = 21f
-            setTextColor(ink)
-            typeface = Typeface.DEFAULT_BOLD
-            setPadding(dp(3), dp(16), dp(3), dp(10))
-        }
-
-        content.addView(view)
+        content.addView(
+            TextView(this).apply {
+                this.text = text
+                textSize = 21f
+                setTextColor(ink)
+                typeface = Typeface.DEFAULT_BOLD
+                setPadding(dp(3), dp(16), dp(3), dp(10))
+            }
+        )
     }
 
     // PÁRRAFOS
     private fun paragraph(text: String) {
 
-        val view = TextView(this).apply {
-            this.text = text
-            textSize = 14f
-            setTextColor(ink)
-            setPadding(dp(4), dp(7), dp(4), dp(10))
-            setLineSpacing(dp(3).toFloat(), 1f)
-        }
-
-        content.addView(view)
+        content.addView(
+            TextView(this).apply {
+                this.text = text
+                textSize = 14f
+                setTextColor(ink)
+                setPadding(dp(4), dp(7), dp(4), dp(10))
+                setLineSpacing(dp(3).toFloat(), 1f)
+            }
+        )
     }
 
     // BOTONES
@@ -559,8 +742,10 @@ class MainActivity : Activity() {
         }
     }
 
-    // CONVERSIÓN DE MEDIDAS
+    // CONVERSIÓN DP
     private fun dp(value: Int): Int {
-        return (value * resources.displayMetrics.density).toInt()
+        return (
+            value * resources.displayMetrics.density
+        ).toInt()
     }
 }
