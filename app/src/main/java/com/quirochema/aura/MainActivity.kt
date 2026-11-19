@@ -1,4 +1,6 @@
+
 package com.quirochema.aura
+
 import android.app.Activity
 import android.os.Bundle
 import android.graphics.Color
@@ -14,6 +16,8 @@ import org.json.JSONArray
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
+import java.text.Normalizer
+import java.util.Locale
 
 class MainActivity : Activity() {
 
@@ -34,6 +38,44 @@ class MainActivity : Activity() {
     private var loadError = false
     private var libraryRaw = ""
 
+    private val libraryKeys = listOf(
+        "colors",
+        "emotions",
+        "symptoms",
+        "ucdm",
+        "prayers"
+    )
+
+    private val labels = mapOf(
+        "name" to "Nombre",
+        "title" to "Título",
+        "hex" to "Código de color",
+        "meaning" to "Significado",
+        "strengths" to "Fortalezas",
+        "challenges" to "Posibles retos",
+        "chakra" to "Chakra relacionado",
+        "description" to "Descripción",
+        "symbolic" to "Interpretación simbólica",
+        "reflection" to "Reflexión",
+        "question" to "Pregunta para explorar",
+        "practice" to "Práctica",
+        "safety" to "Importante",
+        "summary" to "Resumen",
+        "text" to "Contenido",
+        "family" to "Familia",
+        "frequency" to "Frecuencia",
+        "origin" to "Origen",
+        "source" to "Fuente",
+        "updated" to "Actualización",
+        "notes" to "Notas",
+        "limitations" to "Limitaciones",
+        "indications" to "Indicaciones",
+        "contraindications" to "Contraindicaciones",
+        "references" to "Referencias",
+        "steps" to "Pasos",
+        "tags" to "Etiquetas"
+    )
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -48,6 +90,7 @@ class MainActivity : Activity() {
         }
 
         // CABECERA
+
         val header = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
@@ -87,6 +130,7 @@ class MainActivity : Activity() {
         root.addView(header)
 
         // BUSCADOR
+
         val searchContainer = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
@@ -113,6 +157,7 @@ class MainActivity : Activity() {
         root.addView(searchContainer)
 
         // ESTADO DE ACTUALIZACIÓN
+
         updateStatus = TextView(this).apply {
             text = if (loadError) {
                 "Biblioteca no disponible"
@@ -128,6 +173,7 @@ class MainActivity : Activity() {
         root.addView(updateStatus)
 
         // CONTENIDO
+
         val scroll = ScrollView(this).apply {
             fillViewport = true
         }
@@ -149,6 +195,7 @@ class MainActivity : Activity() {
         )
 
         // NAVEGACIÓN
+
         val navigationScroll = HorizontalScrollView(this).apply {
             isHorizontalScrollBarEnabled = false
             setBackgroundColor(Color.WHITE)
@@ -194,6 +241,7 @@ class MainActivity : Activity() {
         setContentView(root)
 
         // BÚSQUEDA EN TIEMPO REAL
+
         search.addTextChangedListener(object : TextWatcher {
 
             override fun beforeTextChanged(
@@ -223,11 +271,21 @@ class MainActivity : Activity() {
 
         showSection("Inicio")
 
-        // COMPROBAR ACTUALIZACIONES
         checkForLibraryUpdate()
     }
 
+    // NORMALIZAR TEXTO PARA BÚSQUEDAS
+
+    private fun normalize(value: String): String {
+
+        return Normalizer.normalize(
+            value.lowercase(Locale.ROOT),
+            Normalizer.Form.NFD
+        ).replace("\\p{Mn}+".toRegex(), "")
+    }
+
     // CARGAR BIBLIOTECA
+
     private fun loadLibrary() {
 
         val localFile = File(filesDir, "library.json")
@@ -236,10 +294,18 @@ class MainActivity : Activity() {
 
             if (localFile.exists()) {
 
-                libraryRaw = localFile.readText(Charsets.UTF_8)
-                library = JSONObject(libraryRaw)
-                loadError = false
-                return
+                try {
+                    libraryRaw = localFile.readText(Charsets.UTF_8)
+                    library = JSONObject(libraryRaw)
+
+                    if (validateLibrary(library)) {
+                        loadError = false
+                        return
+                    }
+
+                } catch (e: Exception) {
+                    // Intentar recuperar desde assets
+                }
             }
 
             libraryRaw = assets.open("library.json")
@@ -247,6 +313,11 @@ class MainActivity : Activity() {
                 .use { it.readText() }
 
             library = JSONObject(libraryRaw)
+
+            if (!validateLibrary(library)) {
+                throw Exception("Biblioteca local no válida")
+            }
+
             loadError = false
 
         } catch (e: Exception) {
@@ -257,10 +328,23 @@ class MainActivity : Activity() {
         }
     }
 
-    // ACTUALIZACIONES AUTOMÁTICAS DESDE GITHUB
+    // VALIDAR BIBLIOTECA
+
+    private fun validateLibrary(json: JSONObject): Boolean {
+
+        return libraryKeys.all { key ->
+            val array = json.optJSONArray(key)
+            array != null && array.length() >= 0
+        }
+    }
+
+    // ACTUALIZACIONES DESDE GITHUB
+
     private fun checkForLibraryUpdate() {
 
         updateStatus.text = "Comprobando actualizaciones..."
+
+        val previousRaw = libraryRaw
 
         Thread {
 
@@ -274,10 +358,12 @@ class MainActivity : Activity() {
                 connection.requestMethod = "GET"
                 connection.connectTimeout = 10000
                 connection.readTimeout = 15000
+
                 connection.setRequestProperty(
                     "User-Agent",
                     "Aura-Quirochema-Android"
                 )
+
                 connection.setRequestProperty(
                     "Cache-Control",
                     "no-cache"
@@ -293,27 +379,13 @@ class MainActivity : Activity() {
                     .bufferedReader(Charsets.UTF_8)
                     .use { it.readText() }
 
-                // VALIDAR JSON
                 val newLibrary = JSONObject(downloaded)
 
-                val validKeys = listOf(
-                    "colors",
-                    "emotions",
-                    "symptoms",
-                    "ucdm",
-                    "prayers"
-                )
-
-                val validLibrary = validKeys.any { key ->
-                    newLibrary.optJSONArray(key) != null
-                }
-
-                if (!validLibrary) {
+                if (!validateLibrary(newLibrary)) {
                     throw Exception("Biblioteca JSON no válida")
                 }
 
-                // COMPROBAR SI HAY CAMBIOS
-                if (downloaded.trim() != libraryRaw.trim()) {
+                if (downloaded.trim() != previousRaw.trim()) {
 
                     saveLibrary(downloaded)
 
@@ -332,7 +404,9 @@ class MainActivity : Activity() {
                 } else {
 
                     runOnUiThread {
-                        updateStatus.text = "Biblioteca actualizada · Sin novedades"
+
+                        updateStatus.text =
+                            "Biblioteca actualizada · Sin novedades"
                     }
                 }
 
@@ -342,7 +416,7 @@ class MainActivity : Activity() {
 
                     updateStatus.text =
                         if (loadError) {
-                            "No se pudo conectar ni cargar la biblioteca"
+                            "No se pudo cargar la biblioteca"
                         } else {
                             "Sin conexión · Biblioteca guardada disponible"
                         }
@@ -355,7 +429,8 @@ class MainActivity : Activity() {
         }.start()
     }
 
-    // GUARDAR ACTUALIZACIÓN DE FORMA SEGURA
+    // GUARDAR ACTUALIZACIÓN SEGURA
+
     private fun saveLibrary(json: String) {
 
         val file = File(filesDir, "library.json")
@@ -384,6 +459,7 @@ class MainActivity : Activity() {
     }
 
     // ACTUALIZAR PANTALLA
+
     private fun refreshContent() {
 
         val query = search.text.toString().trim()
@@ -396,6 +472,7 @@ class MainActivity : Activity() {
     }
 
     // CAMBIAR SECCIÓN
+
     private fun showSection(section: String) {
 
         currentSection = section
@@ -446,9 +523,15 @@ class MainActivity : Activity() {
                 )
             }
 
-            "Aura" -> showArray("colors", "Colores del aura")
+            "Aura" -> showArray(
+                "colors",
+                "Colores del aura"
+            )
 
-            "Emociones" -> showArray("emotions", "Emociones")
+            "Emociones" -> showArray(
+                "emotions",
+                "Emociones"
+            )
 
             "Síntomas" -> showArray(
                 "symptoms",
@@ -468,6 +551,7 @@ class MainActivity : Activity() {
     }
 
     // MOSTRAR CONTENIDO
+
     private fun showArray(key: String, title: String) {
 
         heading(title)
@@ -493,6 +577,7 @@ class MainActivity : Activity() {
     }
 
     // BUSCADOR GLOBAL
+
     private fun showSearch(query: String) {
 
         content.removeAllViews()
@@ -505,17 +590,11 @@ class MainActivity : Activity() {
             return
         }
 
-        val keys = listOf(
-            "colors",
-            "emotions",
-            "symptoms",
-            "ucdm",
-            "prayers"
-        )
+        val normalizedQuery = normalize(query)
 
         var found = 0
 
-        for (key in keys) {
+        for (key in libraryKeys) {
 
             val array = library.optJSONArray(key) ?: continue
 
@@ -523,7 +602,9 @@ class MainActivity : Activity() {
 
                 val obj = array.optJSONObject(i) ?: continue
 
-                if (obj.toString().contains(query, true)) {
+                val searchableText = normalize(obj.toString())
+
+                if (searchableText.contains(normalizedQuery)) {
 
                     val title = obj.optString(
                         "name",
@@ -549,12 +630,61 @@ class MainActivity : Activity() {
         }
     }
 
+    // CONVERTIR VALORES JSON A TEXTO
+
+    private fun jsonValueToString(value: Any): String {
+
+        return when (value) {
+
+            is JSONArray -> {
+
+                val items = mutableListOf<String>()
+
+                for (i in 0 until value.length()) {
+                    items.add(
+                        jsonValueToString(value.get(i))
+                    )
+                }
+
+                items.joinToString(", ")
+            }
+
+            is JSONObject -> {
+
+                val items = mutableListOf<String>()
+                val iterator = value.keys()
+
+                while (iterator.hasNext()) {
+
+                    val key = iterator.next()
+
+                    items.add(
+                        "${labels[key] ?: key}: " +
+                        jsonValueToString(value.get(key))
+                    )
+                }
+
+                items.joinToString("\n")
+            }
+
+            else -> value.toString()
+        }
+    }
+
     // TARJETAS
+
     private fun card(title: String, obj: JSONObject) {
 
         val box = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(17), dp(16), dp(17), dp(17))
+
+            setPadding(
+                dp(17),
+                dp(16),
+                dp(17),
+                dp(17)
+            )
+
             background = rounded(
                 Color.WHITE,
                 dp(14),
@@ -571,7 +701,7 @@ class MainActivity : Activity() {
 
         box.addView(titleView)
 
-        val fields = listOf(
+        val preferredOrder = listOf(
             "hex",
             "meaning",
             "strengths",
@@ -599,62 +729,56 @@ class MainActivity : Activity() {
             "tags"
         )
 
-        val labels = mapOf(
-            "hex" to "Código de color",
-            "meaning" to "Significado",
-            "strengths" to "Fortalezas",
-            "challenges" to "Posibles retos",
-            "chakra" to "Chakra relacionado",
-            "description" to "Descripción",
-            "symbolic" to "Interpretación simbólica",
-            "reflection" to "Reflexión",
-            "question" to "Pregunta para explorar",
-            "practice" to "Práctica",
-            "safety" to "Importante",
-            "summary" to "Resumen",
-            "text" to "Contenido",
-            "family" to "Familia",
-            "frequency" to "Frecuencia",
-            "origin" to "Origen",
-            "source" to "Fuente",
-            "updated" to "Actualización",
-            "notes" to "Notas",
-            "limitations" to "Limitaciones",
-            "indications" to "Indicaciones",
-            "contraindications" to "Contraindicaciones",
-            "references" to "Referencias",
-            "steps" to "Pasos",
-            "tags" to "Etiquetas"
-        )
+        val keys = mutableListOf<String>()
 
-        fields.forEach { key ->
+        preferredOrder.forEach { key ->
+            if (obj.has(key)) keys.add(key)
+        }
+
+        val iterator = obj.keys()
+
+        while (iterator.hasNext()) {
+
+            val key = iterator.next()
+
+            if (key != "name" &&
+                key != "title" &&
+                key !in keys
+            ) {
+                keys.add(key)
+            }
+        }
+
+        keys.forEach { key ->
 
             val value = obj.opt(key)
 
             if (value != null && value != JSONObject.NULL) {
 
-                val text = when (value) {
-
-                    is JSONArray -> {
-                        (0 until value.length()).joinToString(", ") {
-                            value.optString(it)
-                        }
-                    }
-
-                    is JSONObject -> value.toString(2)
-
-                    else -> value.toString()
-                }
+                val text = jsonValueToString(value)
 
                 if (text.isNotBlank()) {
 
                     val fieldView = TextView(this).apply {
+
                         this.text =
                             "${labels[key] ?: key}: $text"
 
                         textSize = 14f
                         setTextColor(ink)
-                        setPadding(0, dp(10), 0, 0)
+
+                        setPadding(
+                            0,
+                            dp(10),
+                            0,
+                            0
+                        )
+
+                        setLineSpacing(
+                            dp(3).toFloat(),
+                            1f
+                        )
+
                         setTextIsSelectable(true)
                     }
 
@@ -674,6 +798,7 @@ class MainActivity : Activity() {
     }
 
     // TÍTULOS
+
     private fun heading(text: String) {
 
         content.addView(
@@ -682,12 +807,19 @@ class MainActivity : Activity() {
                 textSize = 21f
                 setTextColor(ink)
                 typeface = Typeface.DEFAULT_BOLD
-                setPadding(dp(3), dp(16), dp(3), dp(10))
+
+                setPadding(
+                    dp(3),
+                    dp(16),
+                    dp(3),
+                    dp(10)
+                )
             }
         )
     }
 
     // PÁRRAFOS
+
     private fun paragraph(text: String) {
 
         content.addView(
@@ -695,13 +827,24 @@ class MainActivity : Activity() {
                 this.text = text
                 textSize = 14f
                 setTextColor(ink)
-                setPadding(dp(4), dp(7), dp(4), dp(10))
-                setLineSpacing(dp(3).toFloat(), 1f)
+
+                setPadding(
+                    dp(4),
+                    dp(7),
+                    dp(4),
+                    dp(10)
+                )
+
+                setLineSpacing(
+                    dp(3).toFloat(),
+                    1f
+                )
             }
         )
     }
 
     // BOTONES
+
     private fun action(text: String, run: () -> Unit) {
 
         val button = Button(this).apply {
@@ -709,8 +852,16 @@ class MainActivity : Activity() {
             isAllCaps = false
             textSize = 14f
             setTextColor(Color.WHITE)
-            background = rounded(teal, dp(12), teal)
-            setOnClickListener { run() }
+
+            background = rounded(
+                teal,
+                dp(12),
+                teal
+            )
+
+            setOnClickListener {
+                run()
+            }
         }
 
         val params = LinearLayout.LayoutParams(
@@ -724,6 +875,7 @@ class MainActivity : Activity() {
     }
 
     // FONDOS REDONDEADOS
+
     private fun rounded(
         color: Int,
         radius: Int,
@@ -731,6 +883,7 @@ class MainActivity : Activity() {
     ): GradientDrawable {
 
         return GradientDrawable().apply {
+
             setColor(color)
             cornerRadius = radius.toFloat()
 
@@ -741,7 +894,9 @@ class MainActivity : Activity() {
     }
 
     // CONVERSIÓN DP
+
     private fun dp(value: Int): Int {
+
         return (
             value * resources.displayMetrics.density
         ).toInt()
